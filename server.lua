@@ -1,6 +1,7 @@
 #!/usr/bin/env tarantool
 
 local json = require('json')
+local handler = require('handler')
 
 box.cfg{log_format = 'json', log = 'server.log'}
 box.once('init', function()
@@ -13,9 +14,6 @@ box.once('init', function()
 
 local server = require('http.server').new(nil, 8080)
 
-server:route({path = '/', method = "GET"}, handler)
-local function handler(self)
-    return self:json()
-end
+server:route({path = '/', method = "GET"}, handler.get_method)
 
 server:start()
