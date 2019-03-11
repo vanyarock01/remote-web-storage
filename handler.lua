@@ -1,31 +1,35 @@
 local log = require('log')
-local json = require('json')
+local json = require('json') 
 
 local handler = {}
 
-handler.post_method = function(self)
-    local status, body = pcall(self.json, self)
-    log.info('Request body or error' .. body)
-    if not status then
-        return {status = 400}
-    end
+handler.post_method = function(req)
+    
+    local status, body = pcall(req.json, req)
     local key, val = body['key'], body['value']
-
-    if type(key) ~= 'string' or
-            type(val) ~= 'table' then
-        return {status = 400} 
+    
+    
+    if (not status) or (type(key) ~= 'string') or
+            (type(val) ~= 'table') then
+        log.info('ER: invalid data')
+        return { status = 400 }
     end
-    local status, ret = pcall(box.space.dict.insert, box.space.dict, {key, value})
-    log.info(ret)
-    if not status then
-        if ret.code == 3 then -- ER_TUPLE_FOUND 
-            return {status = 409}
-        else
-            return {status = 500}
-        end
-    end 
 
-    return {status = 200}
+    local status, data = pcall(
+        box.space.dict.insert, box.space.dict, {key, val})
+    
+    if status then
+        log.info('OK')
+        log.info(data)
+        return { status = 200 }
+    else
+        log.info('ER: ' .. data.message)
+        if data.code == 3 then -- ER_TUPLE_FOUND 
+            return { status = 409 }
+        else
+            return { status = 500 }
+        end
+    end
 end
 
 handler.put_method = function(self)
@@ -33,14 +37,31 @@ handler.put_method = function(self)
     return {}
 end
 
-handler.get_method = function(self)
-    log.info("GET_METHOD")
-    return {}
+handler.get_method = function(req)
+    local key = req:stash('key')
+    local status, data = pcall(
+        box.space.dict.get, box.space.dict, key) 
+
+    if status and data then
+        log.info('OK')
+        log.info(data)
+        return {
+            status = 200,
+            body = json.encode(data[2])
+        }
+    elseif data == nil then
+        log.info('ER: key not found: ' .. key )
+      	return { status = 404 }
+    else
+        log.info('ER: ' .. data.message)
+        return { status = 500 } -- может быть ER_NO_SUCH_SPACE 
+    end
 end
 
 handler.delete_method = function(self)
-    log.info("DELETE_METHOD")
+    log.info('DELETE_METHOD')
     return {}
 end
 
 return handler
+
