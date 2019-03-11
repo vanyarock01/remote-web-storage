@@ -3,6 +3,7 @@ local json = require('json')
 
 local handler = {}
 
+handler.path_post = '/kv'
 handler.post_method = function(req)
     
     local status, body = pcall(req.json, req)
@@ -32,11 +33,12 @@ handler.post_method = function(req)
     end
 end
 
+handler.path_put = '/kv/:key'
 handler.put_method = function(self)
-    log.info("PUT_METHOD")
     return {}
 end
 
+handler.path_get = '/kv/:key'
 handler.get_method = function(req)
     local key = req:stash('key')
     local status, data = pcall(
@@ -58,6 +60,7 @@ handler.get_method = function(req)
     end
 end
 
+handler.path_delete = '/kv/:key'
 handler.delete_method = function(self)
     log.info('DELETE_METHOD')
     return {}
