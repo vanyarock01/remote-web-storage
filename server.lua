@@ -24,4 +24,7 @@ server:route({
 server:route({
     path = handler.path_put, method = 'PUT'}, handler.put_method)
 
+server:route({
+    path = handler.path_delete, method = 'DELETE'}, handler.delete_method)
+
 server:start()
