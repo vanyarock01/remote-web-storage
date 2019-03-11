@@ -4,14 +4,18 @@ local json = require('json')
 local handler = {}
 
 handler.post_method = function(self)
-    local body = self:json()
+    local status, body = pcall(self.json, self)
+    log.info('Request body or error' .. body)
+    if not status then
+        return {status = 400}
+    end
     local key, val = body['key'], body['value']
 
     if type(key) ~= 'string' or
             type(val) ~= 'table' then
         return {status = 400} 
     end
-    status, ret = pcall(box.space.dict.insert, box.space.dict, {key, value})
+    local status, ret = pcall(box.space.dict.insert, box.space.dict, {key, value})
     log.info(ret)
     if not status then
         if ret.code == 3 then -- ER_TUPLE_FOUND 
