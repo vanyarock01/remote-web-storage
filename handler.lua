@@ -5,12 +5,10 @@ local handler = {}
 
 handler.path_post = '/kv'
 handler.post_method = function(req)
-    
     local status, body = pcall(req.json, req)
-    local key, val = body['key'], body['value']
+    local key, val = body['key'], body['value'] 
     
-    
-    if (not status) or (type(key) ~= 'string') or
+    if (status == false) or (type(key) ~= 'string') or
             (type(val) ~= 'table') then
         log.info('ER: invalid data')
         return { status = 400 }
@@ -34,8 +32,30 @@ handler.post_method = function(req)
 end
 
 handler.path_put = '/kv/:key'
-handler.put_method = function(self)
-    return {}
+handler.put_method = function(req)
+    local key = req:stash('key')
+    log.info(key)
+    local status, body = pcall(req.json, req)
+    local val = body['value'] 
+    
+    if (status == false) or (type(val) ~= 'table') then
+        log.info('ER: invalid data')
+        return { status = 400 }
+    end
+    local status, data = pcall(
+        box.space.dict.update, box.space.dict, key, { {'=', 2, val} })
+
+    log.info(status)
+    if data == nil then
+        log.info('ER: key not found: ' .. key )
+        return { status = 404 }
+    elseif status then
+        log.info('OK')
+        log.info(data)
+        return { status = 200 }
+    else
+        log.info('ER: ' .. data.message)
+    end 
 end
 
 handler.path_get = '/kv/:key'
