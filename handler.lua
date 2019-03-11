@@ -45,7 +45,6 @@ handler.put_method = function(req)
     local status, data = pcall(
         box.space.dict.update, box.space.dict, key, { {'=', 2, val} })
 
-    log.info(status)
     if data == nil then
         log.info('ER: key not found: ' .. key )
         return { status = 404 }
@@ -81,10 +80,26 @@ handler.get_method = function(req)
 end
 
 handler.path_delete = '/kv/:key'
-handler.delete_method = function(self)
-    log.info('DELETE_METHOD')
-    return {}
+handler.delete_method = function(req)
+    local key = req:stash('key')
+    local status, data = pcall(
+        box.space.dict.delete, box.space.dict, key) 
+    log.info(data)
+    log.info(status)
+    if status and data then
+        log.info('OK')
+        log.info(data)
+        return {
+            status = 200,
+            body = json.encode(data[2])
+        }
+    elseif data == nil then
+        log.info('ER: key not found: ' .. key )
+      	return { status = 404 }
+    else
+        log.info('ER: ' .. data.message)
+        return { status = 500 } -- может быть ER_NO_SUCH_SPACE 
+    end
 end
 
 return handler
-
