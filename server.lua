@@ -4,7 +4,7 @@ local json = require('json')
 local handler = require('handler')
 local conf = require('config')
 
-box.cfg{log_format = conf.log_format, log = conf.log_file}
+box.cfg{listen = conf.listen, log_format = conf.log_format, log = conf.log_file}
 box.once('init', function()
     box.schema.create_space('dict')
     box.space.dict:create_index(
