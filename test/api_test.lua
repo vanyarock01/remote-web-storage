@@ -5,7 +5,7 @@ local tap = require("tap")
 local case = {}
 
 local test = tap.test('api_test')
-local url = 'http://89.223.94.187:8080/kv'
+local url = 'http://localhost:8080/kv'
 
 
 function test_post_succes()
@@ -43,8 +43,8 @@ function test_post_invalid_data()
 end
 
 function test_get_succes()
-    local head_status = 'GET: succes status'
-    local head_data = 'GET: succes data'
+    local head_status = 'GET:  succes status'
+    local head_data = 'GET:  succes data'
     local data = {
         {key = '7', value = {a = 'string'}},
         {key = '8', value = {'1', '2', '3', 'a', 'v', 'b'}}
@@ -61,19 +61,70 @@ function test_get_succes()
     test:is(resp.body, json.encode(data[2].value), head_data)
 end
 
+
 function test_get_not_found()
-    head = 'GET: Key not found'
+    local head = 'GET:  key not found'
     local body = {key = 'null', value = {}}
     test:is(
         http_client.get(string.format('%s/%s', url, body.key)).status, 404, head)
 end
 
+
+function test_put_succes()
+    local head = 'PUT:  succes'
+    local data = {
+        {key = '9', value = {}},
+        {value = {'1','2'}}
+    }
+    http_client.post(url, json.encode(data[1]))
+    test:is(http_client.put(
+        string.format('%s/%s', url, data[1].key),
+        json.encode(data[2])).status, 200, head)
+end
+
+
+function test_put_invalid_data()
+    local head = 'PUT:  invalid data'
+    local data = {
+        {key = '10', value = {}},
+        {val = {}},
+        {value = 1},
+        {value = 'string'}
+    }
+    route = string.format('%s/%s', url, data[1].key)
+    http_client.post(url, json.encode(data[1]))
+
+    test:is(
+        http_client.put(route, json.encode(data[2])).status, 400, head)
+
+    test:is(
+        http_client.put(route, json.encode(data[3])).status, 400, head)
+
+    test:is(
+        http_client.put(route, json.encode(data[4])).status, 400, head)
+end
+
+
+function test_put_not_found()
+    head = 'PUT: key not found'
+    local key = 'null'
+    local data = {value = {}}
+    test:is(http_client.put(
+        string.format('%s/%s', url, key), json.encode(data)).status, 404, head)
+end
+
+
 case.tests = {
     test_post_succes,
     test_post_alredy_exist,
     test_post_invalid_data,
+
     test_get_succes,
-    test_get_not_found
+    test_get_not_found,
+
+    test_put_succes,
+    test_put_invalid_data,
+    test_put_not_found
 }
 
 
