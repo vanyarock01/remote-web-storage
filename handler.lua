@@ -7,7 +7,7 @@ handler.path_post = '/kv'
 handler.post_method = function(req)
     local status, body = pcall(req.json, req)
     local key, val = body['key'], body['value'] 
-    
+
     if (status == false) or (type(key) ~= 'string') or
             (type(val) ~= 'table') then
         log.info('ER: invalid data')
