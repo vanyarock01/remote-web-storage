@@ -15,6 +15,7 @@ function test_post_succes()
         http_client.post(url, json.encode(body)).status, 200, head)
 end
 
+
 function test_post_alredy_exist()
     local head = 'POST: already exist'
     local body = {key = '2', value = {c = 'd'}}
@@ -23,6 +24,7 @@ function test_post_alredy_exist()
     test:is(
         http_client.post(url, json.encode(body)).status, 409, head)
 end
+
 
 function test_post_invalid_data()
     head = 'POST: invalid data'
@@ -41,6 +43,7 @@ function test_post_invalid_data()
     test:is(
         http_client.post(url, json.encode(data[4])).status, 400, head)
 end
+
 
 function test_get_succes()
     local head_status = 'GET:  succes status'
@@ -106,11 +109,32 @@ end
 
 
 function test_put_not_found()
-    head = 'PUT: key not found'
+    local head = 'PUT:  key not found'
     local key = 'null'
     local data = {value = {}}
     test:is(http_client.put(
         string.format('%s/%s', url, key), json.encode(data)).status, 404, head)
+end
+
+
+function test_delete_succes()
+    local head_status = 'DEL:  succes status'
+    local head_data = 'DEL:  succes data'
+
+    local data = {key = '11', value = {a = 'string'}}
+    http_client.post(url, json.encode(data))
+
+    local resp = http_client.delete(string.format('%s/%s', url, data.key))
+    test:is(resp.status, 200, head_status)
+    test:is(resp.body, json.encode(data.value), head_data)    
+end
+
+
+function test_delete_not_found()
+    local head = 'DEL:  key not found'
+    local body = {key = 'null', value = {}}
+    test:is(
+        http_client.delete(string.format('%s/%s', url, body.key)).status, 404, head)
 end
 
 
@@ -124,7 +148,10 @@ case.tests = {
 
     test_put_succes,
     test_put_invalid_data,
-    test_put_not_found
+    test_put_not_found,
+    
+    test_delete_succes,
+    test_delete_not_found    
 }
 
 
