@@ -1,3 +1,5 @@
+#!/usr/bin/env tarantool
+
 local http_client = require("http.client")
 local json = require("json")
 local tap = require("tap")
@@ -5,12 +7,19 @@ local tap = require("tap")
 local case = {}
 
 local test = tap.test('api_test')
-local url = 'http://localhost:8080/kv'
+local url = 'http://87.239.109.51:8080/kv'
 
+local test_is = test.is
+function test.is(...)
+    require('fiber').sleep(1)
+    return test_is(...)
+end
+
+local function rnd() return require('digest').urandom(12):hex() end
 
 function test_post_succes()
     local head = 'POST: succes'
-    local body = {key = '1', value = {'a', 'a'}}
+    local body = {key = rnd(), value = {'a', 'a'}}
     test:is(
         http_client.post(url, json.encode(body)).status, 200, head)
 end
@@ -18,7 +27,7 @@ end
 
 function test_post_alredy_exist()
     local head = 'POST: already exist'
-    local body = {key = '2', value = {c = 'd'}}
+    local body = {key = rnd(), value = {c = 'd'}}
     test:is(
         http_client.post(url, json.encode(body)).status, 200, head)
     test:is(
@@ -49,9 +58,9 @@ function test_get_succes()
     local head_status = 'GET:  succes status'
     local head_data = 'GET:  succes data'
     local data = {
-        {key = '7', value = {a = 'string'}},
-        {key = '8', value = {'1', '2', '3', 'a', 'v', 'b'}}
-    }     
+        {key = rnd(), value = {a = 'string'}},
+        {key = rnd(), value = {'1', '2', '3', 'a', 'v', 'b'}}
+    }
     http_client.post(url, json.encode(data[1]))
     http_client.post(url, json.encode(data[2]))
 
@@ -76,7 +85,7 @@ end
 function test_put_succes()
     local head = 'PUT:  succes'
     local data = {
-        {key = '9', value = {}},
+        {key = rnd(), value = {}},
         {value = {'1','2'}}
     }
     http_client.post(url, json.encode(data[1]))
@@ -121,12 +130,12 @@ function test_delete_succes()
     local head_status = 'DEL:  succes status'
     local head_data = 'DEL:  succes data'
 
-    local data = {key = '11', value = {a = 'string'}}
+    local data = {key = rnd(), value = {a = 'string'}}
     http_client.post(url, json.encode(data))
 
     local resp = http_client.delete(string.format('%s/%s', url, data.key))
     test:is(resp.status, 200, head_status)
-    test:is(resp.body, json.encode(data.value), head_data)    
+    test:is(resp.body, json.encode(data.value), head_data)
 end
 
 
@@ -149,9 +158,9 @@ case.tests = {
     test_put_succes,
     test_put_invalid_data,
     test_put_not_found,
-    
+
     test_delete_succes,
-    test_delete_not_found    
+    test_delete_not_found
 }
 
 
