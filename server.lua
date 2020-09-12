@@ -15,23 +15,28 @@ box.cfg{
 box.once('init', function()
     box.schema.create_space('dict')
     box.space.dict:create_index(
-        'primary', {type = 'hash', parts = {1, 'string'}}
-    )
-    end
-)
+        'primary', {type = 'hash', parts = {1, 'string'}})
+end)
 
-local server = require('http.server').new(nil, conf.port)
+local http_router = require('http.router')
+local http_server = require('http.server')
 
-server:route({
+local server = http_server.new(
+    nil,conf.port, { log_requests = true, log_errors = true })
+
+local router = http_router.new()
+
+router:route({
     path = handler.path_get, method = 'GET'}, handler.get_method)
 
-server:route({
+router:route({
     path = handler.path_post, method = 'POST'}, handler.post_method)
 
-server:route({
+router:route({
     path = handler.path_put, method = 'PUT'}, handler.put_method)
 
-server:route({
+router:route({
     path = handler.path_delete, method = 'DELETE'}, handler.delete_method)
 
+server:set_router(router)
 server:start()
