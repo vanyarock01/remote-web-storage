@@ -1,6 +1,7 @@
 local helpers = {}
 
-helpers.api_url = 'http://localhost:8080/kv'
+assert(os.getenv('URI'), 'Usage:\n    URI="<HOST>:<PORT>" luatest')
+helpers.api_url = string.format('http://%s/kv', os.getenv('URI'))
 
 helpers.random_key = function()
     return require('digest').urandom(12):hex()

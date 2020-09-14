@@ -6,13 +6,30 @@ local helpers = require('test.helpers')
 local http_client = require("http.client")
 local json = require("json")
 
-g.test_post = function()
+local value = {a = 'str'}
+
+g.test_post_string = function()
+    local body = {key = helpers.random_key(), value = 'value'}
+    t.assert_equals(http_client.post(helpers.api_url, json.encode(body)).status, 200)
+end
+
+g.test_post_nubmer = function()
+    local body = {key = helpers.random_key(), value = 1}
+    t.assert_equals(http_client.post(helpers.api_url, json.encode(body)).status, 200)
+end
+
+g.test_post_map = function()
+    local body = {key = helpers.random_key(), value = {a = 'a'}}
+    t.assert_equals(http_client.post(helpers.api_url, json.encode(body)).status, 200)
+end
+
+g.test_post_array = function()
     local body = {key = helpers.random_key(), value = {'a', 'a'}}
     t.assert_equals(http_client.post(helpers.api_url, json.encode(body)).status, 200)
 end
 
 g.test_get = function()
-    local body = {key = helpers.random_key(), value = {a = 'str'}}
+    local body = {key = helpers.random_key(), value = value}
     t.assert_equals(
         http_client.post(helpers.api_url, json.encode(body)).status, 200, "Error during POST req")
 
@@ -23,11 +40,11 @@ end
 
 
 g.test_put = function()
-    local body = {key = helpers.random_key(), value = {}}
+    local body = {key = helpers.random_key(), value = {x=0}}
     t.assert_equals(
         http_client.post(helpers.api_url, json.encode(body)).status, 200, "Error during POST req")
 
-    body.value = {'1','2'}
+    body.value = value
 
     t.assert_equals(
         http_client.put(helpers.url_join(body.key), json.encode(body)).status, 200)
@@ -39,7 +56,7 @@ end
 
 
 g.test_delete = function()
-    local body = {key = helpers.random_key(), value = {a = 'string'}}
+    local body = {key = helpers.random_key(), value = value}
     http_client.post(helpers.api_url, json.encode(body))
 
     local resp = http_client.delete(helpers.url_join(body.key))
